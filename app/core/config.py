@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
+    ollama_keep_alive: str = "30m"  # how long Ollama keeps the model in (GPU) memory when idle
     llm_temperature: float = Field(0.1, ge=0.0, le=2.0)
     llm_max_tokens: int = Field(700, ge=1)
     llm_timeout_s: float = Field(60.0, gt=0)
@@ -113,6 +114,7 @@ class Settings(BaseSettings):
     backend_url: str = "http://127.0.0.1:8000"
     cors_origins: list[str] = ["http://localhost:8501", "http://127.0.0.1:8501"]
     log_level: str = "INFO"
+    warmup_on_startup: bool = True  # preload embedding model (and Ollama model) in the background
 
     # ---- Tunables (settings.yaml) ----
     chunking: ChunkingSettings = ChunkingSettings()

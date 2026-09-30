@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from functools import lru_cache
 
 from langchain_core.embeddings import Embeddings
@@ -12,6 +13,7 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 _override: Embeddings | None = None
+_build_lock = threading.Lock()  # startup warm-up and a first request must not load the model twice
 
 
 def set_embeddings_override(embeddings: Embeddings | None) -> None:
@@ -57,7 +59,8 @@ def get_embeddings() -> Embeddings:
         if settings.embedding_provider == "openai"
         else settings.embedding_model
     )
-    return _build_embeddings(settings.embedding_provider, model, settings.embedding.batch_size)
+    with _build_lock:
+        return _build_embeddings(settings.embedding_provider, model, settings.embedding.batch_size)
 
 
 def embedding_model_id() -> str:

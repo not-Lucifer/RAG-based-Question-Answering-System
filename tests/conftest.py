@@ -69,6 +69,7 @@ def isolated_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Pa
         "OPENAI_API_KEY": "",
         "EMBEDDING_PROVIDER": "local",
         "LOG_LEVEL": "WARNING",
+        "WARMUP_ON_STARTUP": "false",
     }
     for key, value in env.items():
         monkeypatch.setenv(key, value)
