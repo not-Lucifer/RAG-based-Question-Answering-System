@@ -231,8 +231,13 @@ def main() -> int:
         print("\nFix these dataset problems first:\n  - " + "\n  - ".join(problems))
         return 1
     pending = unverified(items)
+    ai_checked = sum(1 for i in items if i.get("ai_checked"))
     if pending:
-        print(f"WARNING: {len(pending)} AI-drafted questions not yet verified by you: {', '.join(pending)}")
+        print(
+            f"Provenance: {len(items) - len(pending)} student-verified, {ai_checked} AI-checked. "
+            f"Not yet verified by you: {len(pending)} "
+            f"({', '.join(pending[:6])}{', ...' if len(pending) > 6 else ''})"
+        )
     in_scope = sum(1 for i in items if i.get("in_scope", True))
     print(
         f"Dataset: {len(items)} questions ({in_scope} in scope, "
@@ -275,6 +280,7 @@ def main() -> int:
         "dataset": str(args.dataset.name),
         "questions": len(items),
         "unverified_questions": len(pending),
+        "ai_checked_questions": ai_checked,
         "corpus": [d.filename for d in corpus],
         "k": args.k,
         "embedding_model": get_settings().active_embedding_model,

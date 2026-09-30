@@ -20,6 +20,7 @@ ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
 # long lines are prose: sample notes and LLM-judge prompt text
 "scripts/make_samples.py" = ["E501"]
 "evaluation/metrics.py" = ["E501"]
+"tests/test_cleaner.py" = ["E501"]  # raw PDF-extraction fixtures
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
