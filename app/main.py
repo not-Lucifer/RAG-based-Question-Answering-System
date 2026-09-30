@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import threading
+import time
+import urllib.request
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -13,9 +17,39 @@ from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import get_logger, setup_logging
 from app.db.database import init_db
+from app.embeddings.factory import get_embeddings
 from app.vectorstore.store import index_status
 
 log = get_logger(__name__)
+
+
+def _warm_up() -> None:
+    """Preload slow models so the first question is not delayed (runs in a background thread).
+
+    Loads the embedding model (~30 s for MiniLM on first use) and, in Ollama mode, asks
+    Ollama to load the chat model into memory. Failures are logged, never raised.
+    """
+    settings = get_settings()
+    started = time.perf_counter()
+    try:
+        get_embeddings().embed_query("warm up")
+    except Exception as exc:
+        log.warning("embedding warm-up failed", extra={"fields": {"error": type(exc).__name__}})
+    if settings.llm_provider == "ollama":
+        body = json.dumps({"model": settings.ollama_model, "keep_alive": settings.ollama_keep_alive}).encode()
+        req = urllib.request.Request(
+            settings.ollama_base_url.rstrip("/") + "/api/generate",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as res:
+                res.read()
+        except Exception as exc:
+            log.warning(
+                "ollama warm-up failed (is Ollama running?)", extra={"fields": {"error": type(exc).__name__}}
+            )
+    log.info("warm-up done", extra={"fields": {"s": round(time.perf_counter() - started, 1)}})
 
 
 @asynccontextmanager
@@ -35,6 +69,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         "api started",
         extra={"fields": {"llm": settings.llm_provider, "embeddings": settings.active_embedding_model}},
     )
+    if settings.warmup_on_startup and status["ok"]:
+        threading.Thread(target=_warm_up, name="warm-up", daemon=True).start()
     yield
 
 

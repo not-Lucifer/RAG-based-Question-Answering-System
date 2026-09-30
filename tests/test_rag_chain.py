@@ -117,3 +117,24 @@ def test_follow_up_is_rewritten_and_retrieves_btree(indexed_docs, fake_llm) -> N
 def test_refusal_needs_no_llm_provider(indexed_docs) -> None:
     llm_factory.set_llm_override(None)  # no OPENAI_API_KEY configured in tests
     assert answer("Who won IPL 2020 cricket tournament?").answer == NOT_FOUND_MESSAGE
+
+
+def test_ollama_model_kept_alive(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import get_settings
+
+    llm_factory.set_llm_override(None)
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_KEEP_ALIVE", "45m")
+    get_settings.cache_clear()
+    llm = llm_factory.get_llm()
+    assert type(llm).__name__ == "ChatOllama" and llm.keep_alive == "45m"
+
+
+def test_warm_up_never_raises_when_ollama_is_down(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import get_settings
+    from app.main import _warm_up
+
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:9")  # nothing listens here
+    get_settings.cache_clear()
+    _warm_up()  # must only log a warning
