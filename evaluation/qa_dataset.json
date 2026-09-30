@@ -1,0 +1,41 @@
+{
+  "description": "Evaluation set for the Academic RAG QA system. Write 20-30 entries YOURSELF from your notes (questions an examiner would ask), including a few out-of-scope questions. The 3 entries below only illustrate the schema and refer to the generated sample PDFs in data/samples/.",
+  "schema": {
+    "id": "unique string",
+    "question": "the question as a student would ask it",
+    "subject": "optional subject tag (informational)",
+    "expected_source": "PDF filename that contains the answer (null for out-of-scope questions)",
+    "expected_pages": "list of 1-based page numbers where the answer is (empty for out-of-scope)",
+    "reference_answer": "short correct answer written from the notes (used by the relevance judge)",
+    "in_scope": "true if the answer is in the material; false if the system should refuse"
+  },
+  "items": [
+    {
+      "id": "dbms-01",
+      "question": "What is the difference between 3NF and BCNF?",
+      "subject": "DBMS",
+      "expected_source": "DBMS_Notes.pdf",
+      "expected_pages": [2],
+      "reference_answer": "3NF allows X -> A when A is a prime attribute even if X is not a superkey; BCNF requires the determinant of every non-trivial FD to be a superkey, so BCNF is stricter.",
+      "in_scope": true
+    },
+    {
+      "id": "cn-01",
+      "question": "Explain the TCP three-way handshake.",
+      "subject": "CN",
+      "expected_source": "CN_Notes.pdf",
+      "expected_pages": [2],
+      "reference_answer": "Client sends SYN (seq x), server replies SYN-ACK (seq y, ack x+1), client sends ACK (ack y+1); the connection is then established.",
+      "in_scope": true
+    },
+    {
+      "id": "oos-01",
+      "question": "Who won the IPL in 2020?",
+      "subject": null,
+      "expected_source": null,
+      "expected_pages": [],
+      "reference_answer": "",
+      "in_scope": false
+    }
+  ]
+}

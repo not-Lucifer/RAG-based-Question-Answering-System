@@ -1,0 +1,23 @@
+# Non-secret tunables. Secrets and machine-specific values belong in .env.
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 150
+  separators: ["\n\n", "\n", ". ", " ", ""]
+  min_page_chars: 30
+
+retrieval:
+  mode: mmr                   # similarity | mmr | hybrid
+  top_k: 5
+  fetch_k: 20                 # candidates for MMR
+  mmr_lambda: 0.6
+  hybrid_weights: [0.4, 0.6]  # [bm25, vector]
+  score_threshold: 0.25       # below this -> "not found in material"
+  use_reranker: false
+  rerank_top_n: 4
+  reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+
+memory:
+  history_turns: 4            # last N user/assistant pairs used for condensing
+
+embedding:
+  batch_size: 32

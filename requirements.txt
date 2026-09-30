@@ -1,0 +1,34 @@
+# core
+python-dotenv>=1.0
+pydantic>=2.7
+pydantic-settings>=2.3
+pyyaml>=6.0
+# langchain
+langchain>=0.3
+langchain-core>=0.3
+langchain-community>=0.3
+langchain-text-splitters>=0.3
+langchain-chroma>=0.2
+langchain-openai>=0.3
+langchain-ollama>=0.3
+langchain-huggingface>=0.1
+# rag components
+chromadb>=0.5
+sentence-transformers>=3.0
+pymupdf>=1.24
+rank-bm25>=0.2.2
+numpy>=1.26
+# backend
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+sqlalchemy>=2.0
+# frontend
+streamlit>=1.38
+requests>=2.32
+# dev / eval
+pytest>=8.0
+httpx>=0.27
+black>=24.0
+ruff>=0.6
+# ragas            # optional evaluation
