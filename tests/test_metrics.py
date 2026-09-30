@@ -38,3 +38,41 @@ def test_llm_judges_parse_scores(fake_llm) -> None:
     assert judge_faithfulness(llm, "q", "a", "ctx") == 4.0
     assert judge_relevance(llm, "q", "a") == 5.0
     assert judge_relevance(fake_llm("no idea"), "q", "a") is None
+
+
+def test_validate_dataset_catches_problems() -> None:
+    from evaluation.dataset import unverified, validate_dataset
+
+    good = {"id": "a", "question": "q?", "expected_source": "x.pdf", "expected_pages": [2],
+            "reference_answer": "r", "in_scope": True, "verified": False}  # fmt: skip
+    oos = {"id": "o", "question": "q?", "expected_source": None, "expected_pages": [],
+           "reference_answer": "", "in_scope": False}  # fmt: skip
+    assert validate_dataset([good, oos], {"X.pdf": 3}) == []
+    assert unverified([good, oos]) == ["a"]
+    bad = [
+        dict(good),  # duplicate id "a"
+        {**good, "id": "b", "expected_pages": [9]},
+        {**good, "id": "c", "expected_source": "y.pdf"},
+        {**oos, "id": "d", "expected_pages": [1]},
+        {"id": "e"},
+    ]
+    problems = validate_dataset([good, *bad], {"x.pdf": 3})
+    text = " | ".join(problems)
+    for expected in ("duplicate id", "beyond end", "not in the corpus", "out-of-scope", "missing fields"):
+        assert expected in text
+
+
+def test_shipped_datasets_are_well_formed() -> None:
+    from pathlib import Path
+
+    from evaluation.dataset import load_dataset, validate_dataset
+
+    root = Path(__file__).resolve().parents[1] / "evaluation"
+    for name in ("qa_dataset.json", "sample_dataset.json"):
+        assert validate_dataset(load_dataset(root / name)) == [], name
+
+
+def test_score_parsing_prefers_final_score_line(fake_llm) -> None:
+    reply = "1. Claim A - SUPPORTED\n2. Claim B - SUPPORTED\n3. Claim C - NOT SUPPORTED\nSCORE: 4"
+    assert judge_faithfulness(fake_llm(reply), "q", "a", "ctx") == 4.0
+    assert judge_faithfulness(fake_llm("**SCORE:** 5"), "q", "a", "ctx") == 5.0

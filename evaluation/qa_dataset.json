@@ -1,32 +1,275 @@
 {
-  "description": "Evaluation set for the Academic RAG QA system. Write 20-30 entries YOURSELF from your notes (questions an examiner would ask), including a few out-of-scope questions. The 3 entries below only illustrate the schema and refer to the generated sample PDFs in data/samples/.",
+  "description": "Evaluation set for the Academic RAG QA system over the student's own notes (3 PDFs). DRAFTED BY AI (Claude) from the extracted note text; every item must be checked by the student against the PDF (question wording, page numbers as shown in the PDF viewer, reference answer) and then marked \"verified\": true. Edit or replace any question you would not ask in an exam.",
   "schema": {
     "id": "unique string",
     "question": "the question as a student would ask it",
-    "subject": "optional subject tag (informational)",
-    "expected_source": "PDF filename that contains the answer (null for out-of-scope questions)",
-    "expected_pages": "list of 1-based page numbers where the answer is (empty for out-of-scope)",
-    "reference_answer": "short correct answer written from the notes (used by the relevance judge)",
-    "in_scope": "true if the answer is in the material; false if the system should refuse"
+    "subject": "subject tag (informational)",
+    "expected_source": "PDF filename exactly as shown in the app library (null for out-of-scope questions)",
+    "expected_pages": "1-based PDF page numbers (as in the PDF viewer, not printed page numbers) where the answer is; empty for out-of-scope",
+    "reference_answer": "short correct answer taken from the notes (used by the relevance judge)",
+    "in_scope": "true if the answer is in the notes; false if the system should refuse",
+    "verified": "false = AI-drafted, not yet checked; set true after you have checked it against the PDF"
   },
   "items": [
     {
-      "id": "dbms-01",
-      "question": "What is the difference between 3NF and BCNF?",
-      "subject": "DBMS",
-      "expected_source": "DBMS_Notes.pdf",
-      "expected_pages": [2],
-      "reference_answer": "3NF allows X -> A when A is a prime attribute even if X is not a superkey; BCNF requires the determinant of every non-trivial FD to be a superkey, so BCNF is stricter.",
-      "in_scope": true
+      "id": "mc-01",
+      "question": "What is a magnetic circuit?",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [1],
+      "reference_answer": "A magnetic circuit is the closed path followed by magnetic flux lines. It is made of high-permeability materials such as soft steel or iron, which offer low resistance to flux, and is used in motors, transformers and generators.",
+      "in_scope": true,
+      "verified": false
     },
     {
-      "id": "cn-01",
-      "question": "Explain the TCP three-way handshake.",
-      "subject": "CN",
-      "expected_source": "CN_Notes.pdf",
-      "expected_pages": [2],
-      "reference_answer": "Client sends SYN (seq x), server replies SYN-ACK (seq y, ack x+1), client sends ACK (ack y+1); the connection is then established.",
-      "in_scope": true
+      "id": "mc-02",
+      "question": "Define magnetomotive force (MMF).",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [1],
+      "reference_answer": "MMF is the magnetic pressure responsible for setting up magnetic flux in a magnetic circuit. It is the product of the number of turns N of the coil and the current I through it (ampere-turns).",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "mc-03",
+      "question": "What is reluctance and on what factors does it depend?",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [2, 6],
+      "reference_answer": "Reluctance is the opposition offered by a magnetic circuit to the production of magnetic flux, analogous to resistance. It depends on the length, the cross-sectional area and the permeability of the material: S = l/(a*mu), measured in AT/Wb.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "mc-04",
+      "question": "What does the B-H curve show and why is it not a straight line?",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [2, 3],
+      "reference_answer": "The B-H (magnetisation) curve plots flux density B against magnetising force H and shows how B varies with H. It is non-linear because the relative permeability of a magnetic material is not constant but varies with flux density.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "mc-05",
+      "question": "What is the difference between retentivity and coercivity?",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [4, 5],
+      "reference_answer": "Retentivity is the magnetisation (B) that remains when the external magnetising field is removed. Coercivity is the reverse magnetising field (-H) needed to demagnetise the material completely.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "mc-06",
+      "question": "What is hysteresis loss and how is it reduced in transformers?",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [5],
+      "reference_answer": "Hysteresis loss is the energy lost as heat during repeated magnetisation and demagnetisation; the loss per unit volume equals the area of the hysteresis loop. Transformers use a soft iron core because its hysteresis loss is much smaller.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "mc-07",
+      "question": "Compare a magnetic circuit with an electric circuit.",
+      "subject": "Electrical Engineering",
+      "expected_source": "magnetic circuit.pdf",
+      "expected_pages": [5, 6, 7],
+      "reference_answer": "Flux = MMF/reluctance versus current = EMF/resistance; flux in webers versus current in amperes; MMF in ampere-turns versus EMF in volts; there is no perfect magnetic insulator; reluctance varies with B while resistance is almost constant; energy is needed only to set up flux, but continuously for current.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-01",
+      "question": "What are the main constructional parts of a DC machine?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [1, 2],
+      "reference_answer": "Yoke, poles and pole shoes, field winding, armature core, armature winding, and commutator with brushes.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-02",
+      "question": "What is the function of the commutator in a DC generator?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [1, 2, 3],
+      "reference_answer": "It collects the current from the armature conductors and acts as a mechanical rectifier, converting the alternating current induced in the armature into direct current at the load terminals through stationary brushes.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-03",
+      "question": "Differentiate between series wound and shunt wound DC generators.",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [4],
+      "reference_answer": "Series: field in series with the armature, carries the full load current, few turns of thick wire, very low resistance (about 0.5 ohm). Shunt: field in parallel with the armature, full voltage across it, many turns of thin wire, high resistance (about 100 ohm), takes under 5% of rated current.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-04",
+      "question": "Write the EMF equation of a DC generator.",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [5, 6],
+      "reference_answer": "Eg = P*phi*Z*N / (60*A) volts, where P = poles, phi = flux per pole, Z = armature conductors, N = speed in rpm, A = parallel paths. For lap winding A = P; for wave winding A = 2.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-05",
+      "question": "What is back EMF and what is its significance in a DC motor?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [7],
+      "reference_answer": "Back EMF is the EMF induced in the motor armature by generator action; it opposes the supply voltage, Eb = P*phi*Z*N/(60*A). It is needed for energy conversion (Pmech = Eb*Ia) and regulates armature current, Ia = (V - Eb)/Ra, making the motor self-regulating.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-06",
+      "question": "Derive or state the armature torque equation of a DC motor.",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [9],
+      "reference_answer": "Ta = 9.55 * Eb * Ia / N = 0.159 * P * phi * Z * Ia / A newton-metres, so torque is proportional to flux times armature current; shaft torque = Ta - frictional torque.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-07",
+      "question": "What are the differences between slip ring and squirrel cage induction motors?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [11, 12],
+      "reference_answer": "Slip ring: complicated construction with slip rings and brushes, external rotor resistance can be added, high starting torque, more maintenance, costlier, used in cranes and hoists. Squirrel cage: simple, rugged, cheap, bars shorted by end rings, low starting torque, less maintenance, widely used in fans, lathes and pumps.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-08",
+      "question": "What is slip, and why can an induction motor never run at synchronous speed?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [12],
+      "reference_answer": "Slip s = (Ns - Nr)/Ns. At synchronous speed there is no relative motion between the rotating field and the rotor, so no EMF or current is induced and no torque is produced; the rotor therefore settles below synchronous speed.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-09",
+      "question": "Why is a single-phase induction motor not self-starting?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [14, 15],
+      "reference_answer": "Its stator produces a pulsating, not rotating, field. By double revolving field theory this splits into two equal fields rotating in opposite directions whose torques are equal and opposite at start, so the net starting torque is zero.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "dc-10",
+      "question": "Why is a synchronous motor not self-starting and what methods are used to start it?",
+      "subject": "Electrical Engineering",
+      "expected_source": "dc and ac machine.pdf",
+      "expected_pages": [19, 20],
+      "reference_answer": "The stator field reverses every half cycle, so the stationary rotor gets a rapidly reversing torque and cannot start. It is started with a pony motor, a damper winding, or a small coupled DC machine that brings it near synchronous speed before DC excitation locks it in.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-01",
+      "question": "What is the difference between a biodata, a resume and a CV?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [1],
+      "reference_answer": "A biodata emphasises personal details (age, marital status, etc.) and is now obsolete; a resume omits personal details and is skill-oriented, suited to any position; a CV has everything in a resume plus detailed academic credentials and publications, and is knowledge-oriented for research positions.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-02",
+      "question": "What are the different types of resumes?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [1],
+      "reference_answer": "Chronological (work history in reverse order, for a strong work history), functional (focus on skills, for career changers or gaps), combination (skills first, then employment history) and targeted resumes.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-03",
+      "question": "What is a stress interview?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [5],
+      "reference_answer": "An interview that tests how a candidate responds to aggressive, embarrassing or rude questioning, e.g. several questions at once, no time to answer, an interrogatory tone or unrelated questions, to see how well they work under pressure.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-04",
+      "question": "How should a candidate prepare for an interview?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [6, 7],
+      "reference_answer": "Research the company, look sharp, be prepared with resume copies and questions, be on time, show enthusiasm, listen, answer the question asked, give specific examples, ask questions and follow up afterwards.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-05",
+      "question": "What is a group discussion, and how many participants does it usually have?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [8],
+      "reference_answer": "According to R C Sharma and Krishna Mohan, a GD is held to discuss a problem or issue to arrive at a decision and exchange information; it is used to assess a candidate's suitability. A group usually has 6 to 10 people (sometimes up to 16) and lasts 10-15 minutes.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-06",
+      "question": "What are the objectives of a group discussion?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [9],
+      "reference_answer": "Produce a range of options or solutions, generate ideas by examining issues in depth, broaden participants' outlook, develop interpersonal communication skills, change attitudes through peer influence, and give the training team feedback on participants.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-07",
+      "question": "List the don'ts of participating in a group discussion.",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [10],
+      "reference_answer": "Do not initiate without knowledge of the topic, over-speak or snatch others' chances, argue or shout, look at evaluators, talk irrelevantly, use negative body gestures, quote wrong statistics, show low confidence, dominate, or embarrass others.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-08",
+      "question": "What is a Statement of Purpose (SOP) and why is it important?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [15],
+      "reference_answer": "An SOP is a letter to the admission committee stating why the applicant chose a course, their interests, goals and career plans. It is important because it is often the first document read, makes the application stand out among similar candidates and shows how well the applicant articulates ideas.",
+      "in_scope": true,
+      "verified": false
+    },
+    {
+      "id": "cs-09",
+      "question": "What is the difference between a conference and a seminar?",
+      "subject": "Technical Communication",
+      "expected_source": "Unit 2 communication skills for Career building.pdf",
+      "expected_pages": [19, 20],
+      "reference_answer": "A conference is a large formal gathering over a few days to discuss a topic of common interest and get opinions or solutions, with limited audience participation. A seminar is an instructional event of an hour or more where one or two experts educate and guide, with active participation.",
+      "in_scope": true,
+      "verified": false
     },
     {
       "id": "oos-01",
@@ -35,7 +278,38 @@
       "expected_source": null,
       "expected_pages": [],
       "reference_answer": "",
-      "in_scope": false
+      "in_scope": false,
+      "verified": false
+    },
+    {
+      "id": "oos-02",
+      "question": "Explain the TCP three-way handshake.",
+      "subject": null,
+      "expected_source": null,
+      "expected_pages": [],
+      "reference_answer": "",
+      "in_scope": false,
+      "verified": false
+    },
+    {
+      "id": "oos-03",
+      "question": "What is the EMF equation of a transformer?",
+      "subject": "Electrical Engineering",
+      "expected_source": null,
+      "expected_pages": [],
+      "reference_answer": "Near-domain trap: the notes give EMF equations for DC generators and alternators but not for transformers; the system should refuse rather than adapt another equation.",
+      "in_scope": false,
+      "verified": false
+    },
+    {
+      "id": "oos-04",
+      "question": "What is the difference between a stepper motor and a servo motor?",
+      "subject": "Electrical Engineering",
+      "expected_source": null,
+      "expected_pages": [],
+      "reference_answer": "Near-domain trap: neither motor type is covered in the notes.",
+      "in_scope": false,
+      "verified": false
     }
   ]
 }
