@@ -2,7 +2,7 @@
 
 Answers academic questions from uploaded study PDFs with cited (file + page) answers. The spec is the P_102 Project Blueprint (keep a copy at `docs/P_102_Academic_RAG_QA_Project_Blueprint.pdf`). The build workflow is the P_102 Claude Code Build Playbook.
 
-**Current phase:** Phases 0–9 done; evaluation set drafted (30 questions over the 3 uploaded notes, awaiting student review). Next: review the dataset, re-run `run_eval.py --llm`, take screenshots, push, optionally deploy.
+**Current phase:** Phases 0–9 done; evaluation run, report drafted (`docs/report/project_report.md`), screenshots in `docs/screenshots/`. Next: student review, push + PR, optional Render deploy.
 
 ## Commands (Windows: `.\make.ps1 <target>`)
 
@@ -20,4 +20,5 @@ Answers academic questions from uploaded study PDFs with cited (file + page) ans
 - Wrap external calls (LLM, embeddings, file IO, Chroma) and raise `AppError` subclasses from `app/core/exceptions.py`.
 - Tests must run offline: use `set_embeddings_override` / `set_llm_override` and the fixtures in `tests/conftest.py`.
 - Use LangChain 1.x split packages and LCEL. No legacy `LLMChain` / `RetrievalQA`.
-- `evaluation/qa_dataset.json` was AI-drafted at the student's request; items stay `"verified": false` until the student checks them. Never set `verified` yourself, and do not write report conclusions.
+- `evaluation/qa_dataset.json` was AI-drafted and AI-reviewed at the student's request; items stay `"verified": false` until the student checks them. Never set `verified` yourself.
+- `docs/report/project_report.md` was AI-drafted at the student's request from measured results; keep every number traceable to tests or `evaluation/results`, and keep the AI-assistance disclosure (Appendix C).
