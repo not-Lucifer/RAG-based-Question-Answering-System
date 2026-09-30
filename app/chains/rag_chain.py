@@ -115,15 +115,15 @@ def build_rag_chain(retriever: BaseRetriever, llm: BaseChatModel | None = None) 
     """LCEL chain: ``{"question"} -> {"answer", "docs", "used_context"}``.
 
     retriever -> optional rerank -> score gate -> format context -> prompt -> LLM -> StrOutputParser.
-    When nothing passes the score threshold the LLM is not called.
+    When nothing passes the score threshold the LLM is neither built nor called, so
+    refusals work even when no LLM provider is configured.
     """
-    llm = llm or get_llm()
-    generate = QA_PROMPT | llm | StrOutputParser()
 
     def _answer_or_refuse(inputs: dict[str, Any]) -> dict[str, Any]:
         docs = inputs["docs"]
         if not passes_threshold(docs):
             return {"answer": NOT_FOUND_MESSAGE, "docs": [], "used_context": False}
+        generate = QA_PROMPT | (llm or get_llm()) | StrOutputParser()
         answer = generate.invoke({"context": format_context(docs), "question": inputs["question"]})
         return {"answer": answer.strip(), "docs": docs, "used_context": True}
 

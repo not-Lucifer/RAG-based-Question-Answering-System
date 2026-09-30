@@ -112,3 +112,8 @@ def test_follow_up_is_rewritten_and_retrieves_btree(indexed_docs, fake_llm) -> N
     assert result.standalone_question == "What are the advantages of B-trees?"
     assert result.sources[0].source == "dbms.pdf" and result.sources[0].page == 2
     assert llm.calls == 2  # condense + answer
+
+
+def test_refusal_needs_no_llm_provider(indexed_docs) -> None:
+    llm_factory.set_llm_override(None)  # no OPENAI_API_KEY configured in tests
+    assert answer("Who won IPL 2020 cricket tournament?").answer == NOT_FOUND_MESSAGE
