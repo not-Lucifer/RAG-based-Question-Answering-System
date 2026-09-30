@@ -51,6 +51,7 @@ def get_llm(streaming: bool = False) -> BaseChatModel:
             base_url=s.ollama_base_url,
             temperature=s.llm_temperature,
             num_predict=s.llm_max_tokens,
+            keep_alive=s.ollama_keep_alive,
         )
     except LLMUnavailableError:
         raise
