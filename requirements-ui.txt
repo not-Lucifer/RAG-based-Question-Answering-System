@@ -1,0 +1,4 @@
+# Frontend (rag-ui) only: the UI talks to the backend over HTTP and imports no app code.
+streamlit>=1.38
+requests>=2.32
+python-dotenv>=1.0
