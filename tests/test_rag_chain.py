@@ -138,3 +138,74 @@ def test_warm_up_never_raises_when_ollama_is_down(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:9")  # nothing listens here
     get_settings.cache_clear()
     _warm_up()  # must only log a warning
+
+
+# ------------------------------------------------------------------ condensing guards
+
+REFUSED_3NF = [
+    {"role": "user", "content": "what is 3nf"},
+    {"role": "assistant", "content": NOT_FOUND_MESSAGE},
+]
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        ("what is resume?", False),
+        ("What is the difference between a resume and a CV?", False),
+        ("explain its advantages", True),
+        ("What about the time complexity?", True),
+        ("why?", True),
+        ("and B+ trees?", True),
+        ("Give an example", True),
+        ("explain the last one in detail", True),
+        ("tell me more about the second point", True),
+    ],
+)
+def test_needs_condensing(question: str, expected: bool) -> None:
+    from app.chains.memory import needs_condensing
+
+    assert needs_condensing(question) is expected
+
+
+def test_standalone_question_mid_chat_is_not_rewritten(fake_llm) -> None:
+    llm = fake_llm("What is the meaning of 3NF in the context of database normalization?")
+    assert condense("what is resume?", format_history(REFUSED_3NF)) == "what is resume?"
+    assert llm.calls == 0  # also saves an LLM round-trip
+
+
+def test_rewrite_that_drops_topic_is_rejected(fake_llm) -> None:
+    # A small model "rewrote" the follow-up into the previous question (real bug seen with llama3.2:3b).
+    fake_llm("What is the meaning of 3NF in the context of database normalization?")
+    question = "what does it say about resume formats?"
+    assert condense(question, format_history(REFUSED_3NF)) == question
+
+
+def test_standalone_question_after_refusal_is_answered(indexed_docs, fake_llm) -> None:
+    fake_llm("A B-tree is a balanced search tree [1].")
+    result = answer("What is a B-tree?", history=REFUSED_3NF, mode="similarity")
+    assert result.used_context and result.standalone_question == "What is a B-tree?"
+
+
+def test_echoed_context_label_is_stripped() -> None:
+    from app.chains.rag_chain import clean_answer
+
+    raw = "[1] (Unit 2 communication skills for Career building.pdf, p.1)\n\nA resume is a summary [1]."
+    assert clean_answer(raw) == "A resume is a summary [1]."
+    assert clean_answer("A resume is a summary [1].") == "A resume is a summary [1]."
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "How should I prepare for a group discussion?",
+        '"How should I prepare for a group discussion?"',
+        "Standalone question: How should I prepare for a group discussion?",
+        "Here is the rewritten question:\n\nHow should I prepare for a group discussion?",
+        "**How should I prepare for a group discussion?**\n\nThis keeps the context of the conversation.",
+    ],
+)
+def test_extract_question_from_chatty_output(raw: str) -> None:
+    from app.chains.memory import extract_question
+
+    assert extract_question(raw) == "How should I prepare for a group discussion?"

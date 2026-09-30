@@ -27,7 +27,7 @@
 ## Query flow
 
 1. `ChatService.ask` loads the last `2 × history_turns` messages of the session.
-2. `chains.memory.condense` rewrites a follow-up into a standalone question (skipped when there is no history).
+2. `chains.memory.condense` rewrites a follow-up into a standalone question. It is skipped when there is no history **or the question is already standalone**, i.e. it has no back-references such as "it", "its", "the last one" or "what about…". The rewrite is rejected when it drops the question's topic words. Small local models (llama3.2:3b) otherwise tend to replace a new question with the previous one.
 3. `retrieval.build_retriever(mode, top_k, filters)` runs one of three modes:
    - **similarity**: nearest neighbours from Chroma.
    - **mmr**: fetch `fetch_k` candidates with their embeddings, then Maximal Marginal Relevance (λ = 0.6).

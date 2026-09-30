@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass, field
@@ -24,6 +25,13 @@ from app.retrieval.retriever import Mode, build_retriever
 
 log = get_logger(__name__)
 SNIPPET_CHARS = 300
+# Small models sometimes open by copying a context label, e.g. "[1] (notes.pdf, p.1)".
+_ECHOED_LABEL = re.compile(r"^\s*(\[\d+\]\s*\([^()\n]*?p\.\s*\d+\)\s*)+")
+
+
+def clean_answer(text: str) -> str:
+    """Trim whitespace and any context label the model echoed at the start."""
+    return _ECHOED_LABEL.sub("", text).strip()
 
 
 @dataclass
@@ -125,7 +133,7 @@ def build_rag_chain(retriever: BaseRetriever, llm: BaseChatModel | None = None) 
             return {"answer": NOT_FOUND_MESSAGE, "docs": [], "used_context": False}
         generate = QA_PROMPT | (llm or get_llm()) | StrOutputParser()
         answer = generate.invoke({"context": format_context(docs), "question": inputs["question"]})
-        return {"answer": answer.strip(), "docs": docs, "used_context": True}
+        return {"answer": clean_answer(answer), "docs": docs, "used_context": True}
 
     return (
         RunnablePassthrough.assign(docs=itemgetter("question") | retriever)
@@ -217,4 +225,4 @@ def stream_answer(
         raise LLMUnavailableError(
             "The language model request failed. Check the provider and try again."
         ) from exc
-    yield "result", RAGResult("".join(parts).strip(), to_sources(docs), True, standalone)
+    yield "result", RAGResult(clean_answer("".join(parts)), to_sources(docs), True, standalone)
