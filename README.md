@@ -131,7 +131,7 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 
 `make test` runs the whole suite **offline** in about 20 seconds. It uses deterministic fake embeddings, a fake chat model and temp directories, so there are no downloads, API calls or writes to `data/`. It covers the loader, cleaner, chunker, vector store, retrieval modes and filters, the RAG chain and memory, the full API flow and upload security, and the Streamlit UI.
 
-`make eval` builds throwaway indexes at chunk sizes 500 and 1000, then scores each retrieval mode:
+`make eval` copies the READY documents in your library into throwaway indexes at chunk sizes 500 and 1000 (your real index is untouched), then scores each retrieval mode. `--llm` also generates and judges answers for the main configuration (`--llm-all` does it for every row). Use `--samples data/samples --dataset evaluation/sample_dataset.json` to evaluate the bundled sample notes instead.
 
 | Metric | Measures | MVP target |
 |---|---|---|
@@ -140,7 +140,7 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 | Refusal accuracy | Out-of-scope questions answered "not found" | ≥ 90% |
 | Faithfulness / Relevance (`--llm`) | LLM judge, 1–5 | ≥ 4.0 |
 
-`evaluation/qa_dataset.json` currently contains only 3 schema examples. **Write your own 20–30 questions** from your notes; results are saved to `evaluation/results/`.
+`evaluation/qa_dataset.json` holds 30 questions over the three uploaded notes: 26 answerable and 4 that should be refused, two of which are near-domain traps. The questions were **drafted by an AI assistant from the note text and must be checked by the student**. Each item has `"verified": false` until reviewed, and the runner reports how many are still unverified. Before scoring, the dataset is validated: sources must exist in the library, pages must be in range, and ids must be unique. Results, including every generated answer with its judge scores, are saved to `evaluation/results/`.
 
 ## Security
 

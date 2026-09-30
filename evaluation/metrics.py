@@ -67,16 +67,18 @@ _FAITHFULNESS = ChatPromptTemplate.from_messages(
     [
         (
             "human",
-            """You are grading a study assistant. Rate how well EVERY claim in the ANSWER is supported by the CONTEXT.
-5 = fully supported, 4 = minor unsupported detail, 3 = partly supported, 2 = mostly unsupported, 1 = contradicts or invents facts.
-Reply with a single digit only.
+            # Claim-by-claim before scoring: small local judges (llama3.2:3b) answered "1" to
+            # everything with a digit-only prompt, but discriminate well with this format.
+            """You are checking whether an ANSWER is supported by the CONTEXT passages.
+List the main claims of the ANSWER in one short line each and mark each SUPPORTED or NOT SUPPORTED by the CONTEXT.
+Then give a final score from 1 to 5, where 5 means every claim is supported and 1 means most claims are not supported.
+End with a line exactly like: SCORE: <number>
 
 CONTEXT:
 {context}
 
 QUESTION: {question}
-ANSWER: {answer}
-SCORE:""",
+ANSWER: {answer}""",
         )
     ]
 )
@@ -99,6 +101,10 @@ SCORE:""",
 
 
 def _parse_score(text: str) -> float | None:
+    """The last ``SCORE: n`` in the reply, else the first digit 1-5."""
+    labelled = re.findall(r"SCORE\s*[:=]\s*\**\s*([1-5])", text, re.IGNORECASE)
+    if labelled:
+        return float(labelled[-1])
     match = re.search(r"[1-5]", text)
     return float(match.group()) if match else None
 
