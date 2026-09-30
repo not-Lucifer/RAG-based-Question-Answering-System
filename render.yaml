@@ -1,0 +1,51 @@
+# Render Blueprint (Phase 10). Validate with `render blueprints validate` before deploying.
+# Secrets are never stored here: OPENAI_API_KEY uses `sync: false`, so Render asks for
+# it in the Dashboard when the Blueprint is first applied.
+services:
+  - type: web
+    name: rag-api
+    runtime: python
+    plan: starter            # persistent disks need a paid instance (single instance only)
+    region: oregon
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    disk:
+      name: rag-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: LLM_PROVIDER
+        value: openai
+      - key: EMBEDDING_PROVIDER
+        value: openai        # MiniLM needs PyTorch; too heavy for small instances
+      - key: OPENAI_API_KEY
+        sync: false          # secret: entered in the Dashboard, never committed
+      - key: CHROMA_DIR
+        value: /var/data/vectorstore
+      - key: RAW_DIR
+        value: /var/data/raw
+      - key: DATABASE_URL
+        value: sqlite:////var/data/app.db
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: rag-ui
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements-ui.txt
+    startCommand: streamlit run frontend/streamlit_app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: BACKEND_URL     # internal host:port of rag-api over Render's private network
+        fromService:
+          type: web
+          name: rag-api
+          property: hostport
