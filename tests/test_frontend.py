@@ -108,3 +108,30 @@ def test_latex_delimiters_converted() -> None:
 
     assert to_streamlit_markdown(r"Area \(\pi r^2\)") == r"Area $\pi r^2$"
     assert to_streamlit_markdown(r"\[E = mc^2\]") == "$$\nE = mc^2\n$$"
+
+
+def test_interrupted_answer_that_arrived_is_kept() -> None:
+    from components.chat_view import recover_interrupted
+
+    state = {"session_id": None, "messages": [{"role": "user", "content": "magnetism"}]}
+    recover_interrupted(
+        state, "magnetism", {"answer": "Magnetism is ...", "session_id": "s9", "message_id": 28}
+    )
+    assert state["session_id"] == "s9"  # next question continues the same chat
+    assert [m["role"] for m in state["messages"]] == ["user", "assistant"]
+    assert "interrupted" not in state
+
+
+def test_interrupted_answer_that_never_arrived_is_reported() -> None:
+    from components.chat_view import recover_interrupted
+
+    state = {"session_id": "s1", "messages": [{"role": "user", "content": "magnetism"}]}
+    recover_interrupted(state, "magnetism", {})
+    assert state["messages"] == [] and state["interrupted"] == "magnetism"
+
+
+def test_interrupted_warning_is_shown(monkeypatch: pytest.MonkeyPatch) -> None:
+    at = _app(monkeypatch, FakeClient)
+    at.session_state["interrupted"] = "magnetism"
+    at.run()
+    assert any("magnetism" in w.value and "interrupted" in w.value for w in at.warning)

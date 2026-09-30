@@ -15,6 +15,14 @@ Project P_102 · Python · LangChain · ChromaDB · FastAPI · Streamlit · runs
 - **Switchable LLM**: OpenAI (cloud) or LLaMA via Ollama (local, offline), selected by config.
 - **Chat sessions and history** stored in SQLite, with 👍/👎 feedback, streaming answers and an evaluation harness (Hit@k, MRR, LLM-judged faithfulness/relevance).
 
+## Screenshots
+
+| Cited answer with sources | Library, status bar and chat |
+|---|---|
+| ![Cited comparison answer](docs/screenshots/03-cited-comparison-answer.png) | ![Home screen](docs/screenshots/01-home-status-and-answer.png) |
+
+The project report, with design, testing and evaluation results, is in [docs/report/project_report.md](docs/report/project_report.md).
+
 ## Architecture
 
 ```mermaid
@@ -129,7 +137,7 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 
 ## Testing and evaluation
 
-`make test` runs the whole suite **offline** in about 20 seconds. It uses deterministic fake embeddings, a fake chat model and temp directories, so there are no downloads, API calls or writes to `data/`. It covers the loader, cleaner, chunker, vector store, retrieval modes and filters, the RAG chain and memory, the full API flow and upload security, and the Streamlit UI.
+`make test` runs the whole suite **offline** in about 30 seconds. It uses deterministic fake embeddings, a fake chat model and temp directories, so there are no downloads, API calls or writes to `data/`. It covers the loader, cleaner, chunker, vector store, retrieval modes and filters, the RAG chain and memory, the full API flow and upload security, and the Streamlit UI.
 
 `make eval` copies the READY documents in your library into throwaway indexes at chunk sizes 500 and 1000 (your real index is untouched), then scores each retrieval mode. `--llm` also generates and judges answers for the main configuration (`--llm-all` does it for every row). Use `--samples data/samples --dataset evaluation/sample_dataset.json` to evaluate the bundled sample notes instead.
 
