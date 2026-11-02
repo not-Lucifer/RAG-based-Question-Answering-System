@@ -1,0 +1,7 @@
+﻿chunk_size,mode,hit@k,mrr,refusal_retrieval,faithfulness,relevance,refusal_answer,latency_s
+500,similarity,1.0,0.917,0.25,,,,
+500,mmr,1.0,0.917,0.25,,,,
+500,hybrid,1.0,0.923,0.25,,,,
+1000,similarity,1.0,0.955,0.25,,,,
+1000,mmr,1.0,0.946,0.25,3.462,4.231,1.0,5.411
+1000,hybrid,1.0,0.955,0.25,,,,
