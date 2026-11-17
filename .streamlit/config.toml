@@ -1,9 +1,17 @@
-[theme]
-base = "light"
+# Light and dark themes. Streamlit picks by system preference; the user can switch from
+# the app menu (Settings > Theme). frontend/theme.py reads the active one for the page styling.
+[theme.light]
 primaryColor = "#2B3FA6"
 backgroundColor = "#F4F7FB"
 secondaryBackgroundColor = "#E7EDF6"
 textColor = "#17213A"
+font = "sans serif"
+
+[theme.dark]
+primaryColor = "#98A9FF"
+backgroundColor = "#0E1424"
+secondaryBackgroundColor = "#121A2E"
+textColor = "#E7ECF8"
 font = "sans serif"
 
 [browser]
