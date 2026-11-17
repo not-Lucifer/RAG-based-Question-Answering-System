@@ -1,5 +1,5 @@
 # Render Blueprint (Phase 10). Validate with `render blueprints validate` before deploying.
-# Secrets are never stored here: OPENAI_API_KEY uses `sync: false`, so Render asks for
+# Secrets are never stored here: GEMINI_API_KEY uses `sync: false`, so Render asks for
 # it in the Dashboard when the Blueprint is first applied.
 services:
   - type: web
@@ -19,10 +19,10 @@ services:
       - key: PYTHON_VERSION
         value: 3.13.7
       - key: LLM_PROVIDER
-        value: openai
+        value: gemini
       - key: EMBEDDING_PROVIDER
-        value: openai        # MiniLM needs PyTorch; too heavy for small instances
-      - key: OPENAI_API_KEY
+        value: gemini        # MiniLM needs PyTorch; too heavy for small instances
+      - key: GEMINI_API_KEY
         sync: false          # secret: entered in the Dashboard, never committed
       - key: CHROMA_DIR
         value: /var/data/vectorstore

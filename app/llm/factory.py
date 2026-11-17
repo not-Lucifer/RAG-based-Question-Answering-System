@@ -1,4 +1,4 @@
-"""Chat model factory: OpenAI (cloud) or Ollama (local LLaMA)."""
+"""Chat model factory: Gemini or OpenAI (cloud), or Ollama (local LLaMA)."""
 
 from __future__ import annotations
 
@@ -43,6 +43,26 @@ def get_llm(streaming: bool = False) -> BaseChatModel:
                 timeout=s.llm_timeout_s,
                 max_retries=2,
                 streaming=streaming,
+            )
+        if s.llm_provider == "gemini":
+            if s.gemini_api_key is None:
+                raise LLMUnavailableError(
+                    "GEMINI_API_KEY is not set. Add it to .env or switch LLM_PROVIDER=ollama."
+                )
+            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            extra: dict[str, int] = {}
+            if "2.5" in s.gemini_model and "pro" not in s.gemini_model:
+                extra["thinking_budget"] = 0  # hidden reasoning tokens would eat the answer budget
+            return ChatGoogleGenerativeAI(
+                model=s.gemini_model,
+                google_api_key=s.gemini_api_key,
+                temperature=s.llm_temperature,
+                max_output_tokens=s.llm_max_tokens,
+                timeout=s.llm_timeout_s,
+                max_retries=2,
+                streaming=streaming,
+                **extra,
             )
         from langchain_ollama import ChatOllama
 

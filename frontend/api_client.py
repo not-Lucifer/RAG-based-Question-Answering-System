@@ -20,7 +20,7 @@ DEFAULT_BACKEND = "http://127.0.0.1:8000"
 FRIENDLY = {
     "BACKEND_DOWN": "The backend is not reachable. Start it with `make api` (or `.\\make.ps1 api`).",
     "TIMEOUT": "The backend took too long to respond. Try again, or use a smaller PDF.",
-    "LLM_UNAVAILABLE": "The language model is unavailable. Check OPENAI_API_KEY or that Ollama is running.",
+    "LLM_UNAVAILABLE": "The language model is unavailable. Check your API key or that Ollama is running.",
     "INDEX_MISMATCH": "The index was built with a different embedding model. Run "
     "`python scripts/reset_index.py --reindex`.",
     "EMBEDDING_UNAVAILABLE": "The embedding model could not be loaded. Check the backend logs.",

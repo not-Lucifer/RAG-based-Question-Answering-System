@@ -12,7 +12,7 @@ Project P_102 · Python · LangChain · ChromaDB · FastAPI · Streamlit · runs
 - **Follow-up questions**: "explain its advantages" is rewritten using the chat history.
 - **Filters** by subject or document, and top-k control.
 - **Three retrieval modes**: similarity, MMR (default) and hybrid (BM25 + vector). An optional cross-encoder reranker is also available.
-- **Switchable LLM**: OpenAI (cloud) or LLaMA via Ollama (local, offline), selected by config.
+- **Switchable LLM**: Gemini or OpenAI (cloud), or LLaMA via Ollama (local, offline), selected by config.
 - **Chat sessions and history** stored in SQLite, with 👍/👎 feedback, streaming answers and an evaluation harness (Hit@k, MRR, LLM-judged faithfulness/relevance).
 
 ## Screenshots
@@ -28,7 +28,7 @@ The project report, with design, testing and evaluation results, is in [docs/rep
 ```mermaid
 flowchart LR
   subgraph Ingestion["Ingestion (on upload)"]
-    U[PDF upload] --> L[Loader<br/>PyMuPDF] --> C[Cleaner] --> K[Chunker] --> E[Embedder<br/>MiniLM / OpenAI]
+    U[PDF upload] --> L[Loader<br/>PyMuPDF] --> C[Cleaner] --> K[Chunker] --> E[Embedder<br/>MiniLM / Gemini / OpenAI]
   end
   E --> V[(ChromaDB)]
   subgraph Query["Query (per question)"]
@@ -36,7 +36,7 @@ flowchart LR
     R --> V
     R --> RR[Reranker<br/>optional] --> G{score ≥ threshold?}
     G -- no --> NF[“Not found” – no LLM call]
-    G -- yes --> P[Prompt with numbered context] --> LLM[OpenAI / Ollama] --> A[Answer + citations]
+    G -- yes --> P[Prompt with numbered context] --> LLM[Gemini / OpenAI / Ollama] --> A[Answer + citations]
   end
   API --- DB[(SQLite<br/>documents, sessions,<br/>messages, feedback)]
 ```
@@ -58,6 +58,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 
 Edit `.env` and choose **one** LLM:
 
+- **Gemini**: set `GEMINI_API_KEY=` to a key from [Google AI Studio](https://aistudio.google.com/apikey) and `LLM_PROVIDER=gemini`. Add `EMBEDDING_PROVIDER=gemini` to embed with Gemini too.
 - **OpenAI**: set `OPENAI_API_KEY=` to your key (keep `LLM_PROVIDER=openai`).
 - **Local/offline**: install [Ollama](https://ollama.com), run `ollama pull llama3.2:3b`, and set `LLM_PROVIDER=ollama`.
 
@@ -93,10 +94,10 @@ Secrets and machine settings go in **`.env`** (gitignored; start from `.env.exam
 
 | Setting | Default | Notes |
 |---|---|---|
-| `LLM_PROVIDER` | `openai` | `openai` or `ollama` |
-| `OPENAI_API_KEY` | — | Only in `.env`. Stored as a secret: masked in logs and `repr` |
-| `OPENAI_MODEL` / `OLLAMA_MODEL` | `gpt-4o-mini` / `llama3.2:3b` | |
-| `EMBEDDING_PROVIDER` | `local` | `local` (MiniLM, CPU) or `openai` (`text-embedding-3-small`) |
+| `LLM_PROVIDER` | `openai` | `gemini`, `openai` or `ollama` |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` | — | Only in `.env`. Stored as secrets: masked in logs and `repr` |
+| `GEMINI_MODEL` / `OPENAI_MODEL` / `OLLAMA_MODEL` | `gemini-2.5-flash` / `gpt-4o-mini` / `llama3.2:3b` | |
+| `EMBEDDING_PROVIDER` | `local` | `local` (MiniLM, CPU), `gemini` (`gemini-embedding-001`, 768-dim) or `openai` (`text-embedding-3-small`) |
 | `CHROMA_DIR`, `RAW_DIR`, `DATABASE_URL` | `./data/...` | Relative paths resolve against the project root |
 | `MAX_UPLOAD_MB` | `50` | |
 | `retrieval.mode` | `mmr` | `similarity`, `mmr` or `hybrid` |
@@ -160,10 +161,10 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 
 `render.yaml` defines two services:
 
-- **`rag-api`**: FastAPI, with a persistent disk at `/var/data` and slim `requirements-prod.txt` (no PyTorch). It uses OpenAI embeddings and LLM.
+- **`rag-api`**: FastAPI, with a persistent disk at `/var/data` and slim `requirements-prod.txt` (no PyTorch). It uses Gemini embeddings and LLM.
 - **`rag-ui`**: Streamlit. It reaches the API over Render's private network.
 
-`OPENAI_API_KEY` is marked `sync: false`, so Render asks for it in the Dashboard; it is never committed. Validate with `render blueprints validate`, then create the Blueprint from the Render Dashboard. Persistent disks require a paid instance type.
+`GEMINI_API_KEY` is marked `sync: false`, so Render asks for it in the Dashboard; it is never committed. Validate with `render blueprints validate`, then create the Blueprint from the Render Dashboard. Persistent disks require a paid instance type.
 
 ## Project structure
 

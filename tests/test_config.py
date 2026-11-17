@@ -57,3 +57,14 @@ def test_log_redaction() -> None:
 def test_invalid_overlap_rejected() -> None:
     with pytest.raises(ValueError):
         Settings(chunking={"chunk_size": 100, "chunk_overlap": 100})
+
+
+def test_gemini_settings_and_secret() -> None:
+    s = Settings(
+        llm_provider="gemini", embedding_provider="gemini", gemini_api_key="AIzaFAKEKEY0123456789abcdef"
+    )
+    assert s.active_llm_model == s.gemini_model
+    assert s.active_embedding_model == f"gemini:{s.gemini_embedding_model}:{s.gemini_embedding_dim}"
+    assert "AIzaFAKEKEY" not in repr(s)
+    assert Settings(gemini_api_key="  ").gemini_api_key is None
+    assert "AIza***" in redact("key=AIzaFAKEKEY0123456789abcdef")

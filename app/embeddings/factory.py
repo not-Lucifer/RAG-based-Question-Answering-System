@@ -1,4 +1,4 @@
-"""Embedding model factory (local sentence-transformers or OpenAI)."""
+"""Embedding model factory (local sentence-transformers, Gemini or OpenAI)."""
 
 from __future__ import annotations
 
@@ -34,6 +34,16 @@ def _build_embeddings(provider: str, model: str, batch_size: int) -> Embeddings:
             return OpenAIEmbeddings(
                 model=model, api_key=settings.openai_api_key, chunk_size=batch_size, max_retries=2
             )
+        if provider == "gemini":
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+            if settings.gemini_api_key is None:
+                raise EmbeddingError("GEMINI_API_KEY is not set; required for EMBEDDING_PROVIDER=gemini.")
+            return GoogleGenerativeAIEmbeddings(
+                model=model,
+                google_api_key=settings.gemini_api_key,
+                output_dimensionality=settings.gemini_embedding_dim,
+            )
         from langchain_huggingface import HuggingFaceEmbeddings
 
         log.info("loading local embedding model", extra={"fields": {"model": model}})
@@ -54,11 +64,10 @@ def get_embeddings() -> Embeddings:
     if _override is not None:
         return _override
     settings = get_settings()
-    model = (
-        settings.openai_embedding_model
-        if settings.embedding_provider == "openai"
-        else settings.embedding_model
-    )
+    model = {
+        "openai": settings.openai_embedding_model,
+        "gemini": settings.gemini_embedding_model,
+    }.get(settings.embedding_provider, settings.embedding_model)
     with _build_lock:
         return _build_embeddings(settings.embedding_provider, model, settings.embedding.batch_size)
 

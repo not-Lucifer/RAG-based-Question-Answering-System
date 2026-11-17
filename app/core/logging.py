@@ -8,6 +8,7 @@ import sys
 
 _SECRET_PATTERNS = [
     (re.compile(r"sk-[A-Za-z0-9_\-]{8,}"), "sk-***"),  # OpenAI-style keys
+    (re.compile(r"AIza[A-Za-z0-9_\-]{20,}"), "AIza***"),  # Google / Gemini keys
     (re.compile(r"(?i)\b(bearer)\s+[^\s,'\"]+"), r"\1 ***"),
     (re.compile(r"(?i)\b(api[_-]?key|token|secret|password)(\s*[:=]\s*)[^\s,'\"]+"), r"\1\2***"),
 ]
