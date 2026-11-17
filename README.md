@@ -96,7 +96,8 @@ Secrets and machine settings go in **`.env`** (gitignored; start from `.env.exam
 |---|---|---|
 | `LLM_PROVIDER` | `openai` | `gemini`, `openai` or `ollama` |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` | — | Only in `.env`. Stored as secrets: masked in logs and `repr` |
-| `GEMINI_MODEL` / `OPENAI_MODEL` / `OLLAMA_MODEL` | `gemini-2.5-flash` / `gpt-4o-mini` / `llama3.2:3b` | |
+| `GEMINI_MODEL` / `OPENAI_MODEL` / `OLLAMA_MODEL` | `gemini-3.1-flash-lite` / `gpt-4o-mini` / `llama3.2:3b` | |
+| `RETRIEVAL__SCORE_THRESHOLD` | `0.25` | Refusal gate; tuned per embedding model. Use `0.64` with `EMBEDDING_PROVIDER=gemini` (set in `render.yaml`) |
 | `EMBEDDING_PROVIDER` | `local` | `local` (MiniLM, CPU), `gemini` (`gemini-embedding-001`, 768-dim) or `openai` (`text-embedding-3-small`) |
 | `CHROMA_DIR`, `RAW_DIR`, `DATABASE_URL` | `./data/...` | Relative paths resolve against the project root |
 | `MAX_UPLOAD_MB` | `50` | |

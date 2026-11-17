@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-4o-mini"
     gemini_api_key: SecretStr | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.1-flash-lite"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
     ollama_keep_alive: str = "30m"  # how long Ollama keeps the model in (GPU) memory when idle
@@ -104,6 +104,7 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"
     gemini_embedding_model: str = "gemini-embedding-001"
     gemini_embedding_dim: int = Field(768, ge=128, le=3072)  # smaller vectors keep the index compact
+    gemini_embed_per_minute: int = Field(90, ge=1)  # free tier allows 100 texts/min; raise on a paid plan
 
     # ---- Storage ----
     chroma_dir: Path = Path("./data/vectorstore")

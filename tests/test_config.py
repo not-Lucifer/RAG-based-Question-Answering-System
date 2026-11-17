@@ -68,3 +68,46 @@ def test_gemini_settings_and_secret() -> None:
     assert "AIzaFAKEKEY" not in repr(s)
     assert Settings(gemini_api_key="  ").gemini_api_key is None
     assert "AIza***" in redact("key=AIzaFAKEKEY0123456789abcdef")
+    assert "AQ.***" in redact("x AQ.Ab8RN6FAKEKEY0123456789abcdef y")
+
+
+def test_rate_limited_embeddings_wait_for_quota() -> None:
+    from langchain_core.embeddings import FakeEmbeddings
+
+    from app.embeddings.factory import RateLimitedEmbeddings
+
+    now = [0.0]
+    pauses: list[float] = []
+
+    def sleep(seconds: float) -> None:
+        pauses.append(seconds)
+        now[0] += seconds
+
+    emb = RateLimitedEmbeddings(
+        FakeEmbeddings(size=4), per_minute=10, batch=5, clock=lambda: now[0], sleep=sleep
+    )
+    assert len(emb.embed_documents([f"t{i}" for i in range(10)])) == 10
+    assert pauses == []  # exactly the quota: no waiting
+    emb.embed_query("one more")
+    assert pauses and now[0] >= 60  # the window had to expire first
+
+
+def test_rate_limited_embeddings_retry_on_quota_error() -> None:
+    from app.embeddings.factory import RateLimitedEmbeddings
+
+    class Flaky:
+        calls = 0
+
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            Flaky.calls += 1
+            if Flaky.calls == 1:
+                raise RuntimeError("429 RESOURCE_EXHAUSTED")
+            return [[0.0] for _ in texts]
+
+        def embed_query(self, text: str) -> list[float]:
+            return [0.0]
+
+    pauses: list[float] = []
+    emb = RateLimitedEmbeddings(Flaky(), per_minute=100, sleep=pauses.append)  # type: ignore[arg-type]
+    assert emb.embed_documents(["a", "b"]) == [[0.0], [0.0]]
+    assert pauses == [40]
