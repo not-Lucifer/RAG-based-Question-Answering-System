@@ -12,12 +12,18 @@ from components.source_card import render_sources
 
 _BLOCK_MATH = re.compile(r"\\\[(.+?)\\\]", re.DOTALL)
 _INLINE_MATH = re.compile(r"\\\((.+?)\\\)", re.DOTALL)
+_CITATION = re.compile(r"\[(\d+)\]")
 
 
 def to_streamlit_markdown(text: str) -> str:
     """Convert LaTeX delimiters \\( \\) and \\[ \\] to the $ / $$ that Streamlit renders."""
     text = _BLOCK_MATH.sub(lambda m: f"$$\n{m.group(1).strip()}\n$$", text)
     return _INLINE_MATH.sub(lambda m: f"${m.group(1).strip()}$", text)
+
+
+def mark_citations(text: str) -> str:
+    """Turn [n] into a coloured-background span, which the theme draws as a highlighter mark."""
+    return _CITATION.sub(r":yellow-background[\1]", text)
 
 
 def _feedback(client: ApiClient, msg: dict[str, Any], idx: int) -> None:
@@ -30,7 +36,7 @@ def _feedback(client: ApiClient, msg: dict[str, Any], idx: int) -> None:
         try:
             client.feedback(message_id, 1 if choice == 1 else -1)
             sent.add(message_id)
-            st.toast("Thanks for the feedback!")
+            st.toast("Feedback saved")
         except ApiError as err:
             st.error(err.message)
 
@@ -39,12 +45,12 @@ def _history(client: ApiClient) -> None:
     messages = st.session_state.messages
     for idx, msg in enumerate(messages):
         with st.chat_message(msg["role"]):
-            st.markdown(to_streamlit_markdown(msg["content"]))
+            st.markdown(mark_citations(to_streamlit_markdown(msg["content"])))
             if msg["role"] == "assistant":
                 render_sources(msg.get("sources", []))
                 _feedback(client, msg, idx)
             elif idx + 1 < len(messages) and messages[idx + 1]["role"] == "user":
-                st.caption("⚠️ No answer was received for this question.")
+                st.caption("No answer was received for this question.")
 
 
 def record_answer(state: MutableMapping[str, Any], data: dict[str, Any]) -> None:
@@ -109,7 +115,7 @@ def _ask(client: ApiClient, question: str, filters: dict[str, Any]) -> None:
                 return
             render_sources(data.get("sources", []))
             if data.get("latency_ms"):
-                st.caption(f"⏱ {data['latency_ms'] / 1000:.1f}s")
+                st.caption(f"Answered in {data['latency_ms'] / 1000:.1f} s")
         record_answer(st.session_state, data)
         handled = True
     finally:
