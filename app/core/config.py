@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     gemini_api_key: SecretStr | None = None
     gemini_model: str = "gemini-3.1-flash-lite"
+    gemini_requests_per_minute: int = Field(12, ge=1)  # free tier allows 15/min; raise on a paid plan
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
     ollama_keep_alive: str = "30m"  # how long Ollama keeps the model in (GPU) memory when idle

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from langchain_core.language_models import BaseChatModel
+from langchain_core.rate_limiters import InMemoryRateLimiter
 
 from app.core.config import get_settings
 from app.core.exceptions import LLMUnavailableError
@@ -10,6 +13,12 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 _override: BaseChatModel | None = None
+
+
+@lru_cache
+def _gemini_limiter(requests_per_minute: int) -> InMemoryRateLimiter:
+    """One limiter shared by every Gemini chat model, so bursts stay under the quota."""
+    return InMemoryRateLimiter(requests_per_second=requests_per_minute / 60, max_bucket_size=1)
 
 
 def set_llm_override(llm: BaseChatModel | None) -> None:
@@ -62,6 +71,7 @@ def get_llm(streaming: bool = False) -> BaseChatModel:
                 timeout=s.llm_timeout_s,
                 max_retries=2,
                 streaming=streaming,
+                rate_limiter=_gemini_limiter(s.gemini_requests_per_minute),
                 **extra,
             )
         from langchain_ollama import ChatOllama
