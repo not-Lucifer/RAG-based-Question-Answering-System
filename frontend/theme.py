@@ -147,38 +147,29 @@ h2, h3 { font-family: var(--ui); font-weight: 700; color: var(--ink); letter-spa
 """
 
 
-FONTS = """
+# Colours are light-dark() pairs resolved by the browser against the colour-scheme Streamlit sets on
+# .stApp, so the page always matches the active Streamlit theme (system preference or the app
+# menu choice) with no server-side detection. Light: graph paper and ballpoint ink. Dark: the
+# same notebook under a desk lamp. The highlighter stays yellow in both: it is what must pop.
+ROOT = """.stApp {
   --ui: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --read: 'Literata', Georgia, 'Times New Roman', serif;
-"""
-
-# Light: graph paper and ballpoint ink. Dark: the same notebook under a desk lamp, a blue-black
-# page with brighter ink; the highlighter stays yellow because it is the one thing that must pop.
-PALETTES = {
-    "light": """
-  --page: #F4F7FB; --sheet: #FFFFFF; --ink: #17213A; --muted: #5B6783;
-  --ballpoint: #2B3FA6; --highlighter: #FFE15A; --margin: #D9506F;
-  --line: #D5DCEA; --grid: #E8EDF5; --binder: #E7EDF6; --slip-bg: #FBFCFE;
-  --slip-block: #2B3FA6; --focus: rgba(43, 63, 166, 0.18);
-""",
-    "dark": """
-  --page: #0E1424; --sheet: #172036; --ink: #E7ECF8; --muted: #9BA7C6;
-  --ballpoint: #98A9FF; --highlighter: #FFE15A; --margin: #FF7A93;
-  --line: #2B3756; --grid: #131B2F; --binder: #121A2E; --slip-bg: #121A2E;
-  --slip-block: #3A4DC2; --focus: rgba(152, 169, 255, 0.28);
-""",
-}
-
-
-def active_mode() -> str:
-    """ "dark" or "light", following Streamlit's theme (Settings menu or the system preference)."""
-    try:
-        return "dark" if st.context.theme.get("type") == "dark" else "light"
-    except Exception:  # older Streamlit, or no browser context yet
-        return "light"
+  --page: light-dark(#F4F7FB, #0E1424);
+  --sheet: light-dark(#FFFFFF, #172036);
+  --ink: light-dark(#17213A, #E7ECF8);
+  --muted: light-dark(#5B6783, #9BA7C6);
+  --ballpoint: light-dark(#2B3FA6, #98A9FF);
+  --highlighter: #FFE15A;
+  --margin: light-dark(#D9506F, #FF7A93);
+  --line: light-dark(#D5DCEA, #2B3756);
+  --grid: light-dark(#E8EDF5, #131B2F);
+  --binder: light-dark(#E7EDF6, #121A2E);
+  --slip-bg: light-dark(#FBFCFE, #121A2E);
+  --slip-block: light-dark(#2B3FA6, #3A4DC2);
+  --focus: light-dark(rgba(43, 63, 166, 0.18), rgba(152, 169, 255, 0.28));
+}"""
 
 
 def apply() -> None:
     """Inject the stylesheet. Call once per run, right after set_page_config."""
-    root = ":root {" + FONTS + PALETTES[active_mode()] + "}"
-    st.markdown(CSS.replace("/*VARS*/", root), unsafe_allow_html=True)
+    st.markdown(CSS.replace("/*VARS*/", ROOT), unsafe_allow_html=True)
