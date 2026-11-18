@@ -103,7 +103,7 @@ class Settings(BaseSettings):
     embedding_provider: Literal["local", "openai", "gemini"] = "local"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     openai_embedding_model: str = "text-embedding-3-small"
-    gemini_embedding_model: str = "gemini-embedding-001"
+    gemini_embedding_model: str = "gemini-embedding-2"
     gemini_embedding_dim: int = Field(768, ge=128, le=3072)  # smaller vectors keep the index compact
     gemini_embed_per_minute: int = Field(90, ge=1)  # free tier allows 100 texts/min; raise on a paid plan
 
