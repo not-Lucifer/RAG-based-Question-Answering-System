@@ -12,7 +12,7 @@ Project P_102 · Python · LangChain · ChromaDB · FastAPI · Streamlit · runs
 - **Follow-up questions**: "explain its advantages" is rewritten using the chat history.
 - **Filters** by subject or document, and top-k control.
 - **Three retrieval modes**: similarity, MMR (default) and hybrid (BM25 + vector). An optional cross-encoder reranker is also available.
-- **Switchable LLM**: OpenAI (cloud) or LLaMA via Ollama (local, offline), selected by config.
+- **Switchable LLM**: Gemini or OpenAI (cloud), or LLaMA via Ollama (local, offline), selected by config.
 - **Chat sessions and history** stored in SQLite, with 👍/👎 feedback, streaming answers and an evaluation harness (Hit@k, MRR, LLM-judged faithfulness/relevance).
 
 ## Screenshots
@@ -28,7 +28,7 @@ The project report, with design, testing and evaluation results, is in [docs/rep
 ```mermaid
 flowchart LR
   subgraph Ingestion["Ingestion (on upload)"]
-    U[PDF upload] --> L[Loader<br/>PyMuPDF] --> C[Cleaner] --> K[Chunker] --> E[Embedder<br/>MiniLM / OpenAI]
+    U[PDF upload] --> L[Loader<br/>PyMuPDF] --> C[Cleaner] --> K[Chunker] --> E[Embedder<br/>MiniLM / Gemini / OpenAI]
   end
   E --> V[(ChromaDB)]
   subgraph Query["Query (per question)"]
@@ -36,7 +36,7 @@ flowchart LR
     R --> V
     R --> RR[Reranker<br/>optional] --> G{score ≥ threshold?}
     G -- no --> NF[“Not found” – no LLM call]
-    G -- yes --> P[Prompt with numbered context] --> LLM[OpenAI / Ollama] --> A[Answer + citations]
+    G -- yes --> P[Prompt with numbered context] --> LLM[Gemini / OpenAI / Ollama] --> A[Answer + citations]
   end
   API --- DB[(SQLite<br/>documents, sessions,<br/>messages, feedback)]
 ```
@@ -58,6 +58,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 
 Edit `.env` and choose **one** LLM:
 
+- **Gemini**: set `GEMINI_API_KEY=` to a key from [Google AI Studio](https://aistudio.google.com/apikey) and `LLM_PROVIDER=gemini`. Add `EMBEDDING_PROVIDER=gemini` to embed with Gemini too.
 - **OpenAI**: set `OPENAI_API_KEY=` to your key (keep `LLM_PROVIDER=openai`).
 - **Local/offline**: install [Ollama](https://ollama.com), run `ollama pull llama3.2:3b`, and set `LLM_PROVIDER=ollama`.
 
@@ -93,10 +94,11 @@ Secrets and machine settings go in **`.env`** (gitignored; start from `.env.exam
 
 | Setting | Default | Notes |
 |---|---|---|
-| `LLM_PROVIDER` | `openai` | `openai` or `ollama` |
-| `OPENAI_API_KEY` | — | Only in `.env`. Stored as a secret: masked in logs and `repr` |
-| `OPENAI_MODEL` / `OLLAMA_MODEL` | `gpt-4o-mini` / `llama3.2:3b` | |
-| `EMBEDDING_PROVIDER` | `local` | `local` (MiniLM, CPU) or `openai` (`text-embedding-3-small`) |
+| `LLM_PROVIDER` | `openai` | `gemini`, `openai` or `ollama` |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` | — | Only in `.env`. Stored as secrets: masked in logs and `repr` |
+| `GEMINI_MODEL` / `OPENAI_MODEL` / `OLLAMA_MODEL` | `gemini-3.1-flash-lite` / `gpt-4o-mini` / `llama3.2:3b` | |
+| `RETRIEVAL__SCORE_THRESHOLD` | `0.25` | Refusal gate; tuned per embedding model. Use `0.64` with `EMBEDDING_PROVIDER=gemini` (set in `render.yaml`) |
+| `EMBEDDING_PROVIDER` | `local` | `local` (MiniLM, CPU), `gemini` (`gemini-embedding-001`, 768-dim) or `openai` (`text-embedding-3-small`) |
 | `CHROMA_DIR`, `RAW_DIR`, `DATABASE_URL` | `./data/...` | Relative paths resolve against the project root |
 | `MAX_UPLOAD_MB` | `50` | |
 | `retrieval.mode` | `mmr` | `similarity`, `mmr` or `hybrid` |
@@ -156,14 +158,25 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 - Uploads are checked for size limit, `.pdf` extension, MIME type and `%PDF-` magic bytes. Files are stored as `<uuid>.pdf` (so a client filename can never choose the path), and display filenames are sanitised.
 - Unexpected server errors return a generic message. Details go only to the server log.
 
-## Deployment (Render)
+## Deployment (Render free plan, Docker)
+
+The `Dockerfile` runs the API and the UI in one container, so a single free Render web service is enough. The free plan has no persistent disk and sleeps after about 15 minutes without visitors (the first request after that takes around a minute). Storage is wiped on every restart, so `deploy/start.sh` re-uploads the PDFs in `data/samples` each time (about 20 chunks, a few Gemini embedding requests); anything a visitor uploads is lost on restart. Memory is not a problem: the API uses about 160 MB and the UI about 65 MB, well under the 512 MB limit.
+
+1. On [dashboard.render.com](https://dashboard.render.com) choose **New → Web Service** and connect this GitHub repository (pick the branch you want to deploy).
+2. Set **Language** to **Docker** and **Instance type** to **Free**.
+3. Under **Environment Variables** add `GEMINI_API_KEY` with your key. Enter it only there, never in the repository.
+4. Create the service and watch the build logs. When the log shows the service is live, open its `onrender.com` URL.
+
+The container uses `LLM_PROVIDER=gemini`, `EMBEDDING_PROVIDER=gemini` and `RETRIEVAL__SCORE_THRESHOLD=0.64` (set in the `Dockerfile`). The free Gemini tier limits requests per minute and per day (1,000 embedding requests a day); the app throttles itself under the per-minute limits.
+
+## Deployment (Render, paid, persistent storage)
 
 `render.yaml` defines two services:
 
-- **`rag-api`**: FastAPI, with a persistent disk at `/var/data` and slim `requirements-prod.txt` (no PyTorch). It uses OpenAI embeddings and LLM.
+- **`rag-api`**: FastAPI, with a persistent disk at `/var/data` and slim `requirements-prod.txt` (no PyTorch). It uses Gemini embeddings and LLM.
 - **`rag-ui`**: Streamlit. It reaches the API over Render's private network.
 
-`OPENAI_API_KEY` is marked `sync: false`, so Render asks for it in the Dashboard; it is never committed. Validate with `render blueprints validate`, then create the Blueprint from the Render Dashboard. Persistent disks require a paid instance type.
+`GEMINI_API_KEY` is marked `sync: false`, so Render asks for it in the Dashboard; it is never committed. Validate with `render blueprints validate`, then create the Blueprint from the Render Dashboard. Persistent disks require a paid instance type.
 
 ## Project structure
 

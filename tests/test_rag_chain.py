@@ -209,3 +209,26 @@ def test_extract_question_from_chatty_output(raw: str) -> None:
     from app.chains.memory import extract_question
 
     assert extract_question(raw) == "How should I prepare for a group discussion?"
+
+
+def test_gemini_provider_requires_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import get_settings
+
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    get_settings.cache_clear()
+    llm_factory.set_llm_override(None)
+    with pytest.raises(LLMUnavailableError, match="GEMINI_API_KEY"):
+        llm_factory.get_llm()
+
+
+def test_gemini_provider_builds_chat_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import get_settings
+
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFAKEKEY0123456789abcdef")
+    get_settings.cache_clear()
+    llm_factory.set_llm_override(None)
+    llm = llm_factory.get_llm()
+    assert type(llm).__name__ == "ChatGoogleGenerativeAI"
+    assert llm.model.endswith(get_settings().gemini_model)

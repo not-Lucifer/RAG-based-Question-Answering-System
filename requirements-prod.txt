@@ -1,7 +1,7 @@
-# Backend (rag-api) for cloud hosting: OpenAI embeddings + OpenAI LLM.
+# Backend (rag-api) for cloud hosting: Gemini embeddings + Gemini LLM (OpenAI also supported).
 # Deliberately excludes sentence-transformers / torch / langchain-huggingface (too
 # large for small instances), Streamlit and dev tools. Requires in the environment:
-#   EMBEDDING_PROVIDER=openai  LLM_PROVIDER=openai  OPENAI_API_KEY=<secret>
+#   EMBEDDING_PROVIDER=gemini  LLM_PROVIDER=gemini  GEMINI_API_KEY=<secret>
 python-dotenv>=1.0
 pydantic>=2.7
 pydantic-settings>=2.3
@@ -11,6 +11,7 @@ langchain-community>=0.3
 langchain-text-splitters>=0.3
 langchain-chroma>=0.2
 langchain-openai>=0.3
+langchain-google-genai>=4.0
 langchain-ollama>=0.3
 chromadb>=0.5
 pymupdf>=1.24

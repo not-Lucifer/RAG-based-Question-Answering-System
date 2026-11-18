@@ -86,9 +86,12 @@ class Settings(BaseSettings):
     )
 
     # ---- LLM ----
-    llm_provider: Literal["openai", "ollama"] = "openai"
+    llm_provider: Literal["openai", "ollama", "gemini"] = "openai"
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-4o-mini"
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = "gemini-3.1-flash-lite"
+    gemini_requests_per_minute: int = Field(12, ge=1)  # free tier allows 15/min; raise on a paid plan
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:3b"
     ollama_keep_alive: str = "30m"  # how long Ollama keeps the model in (GPU) memory when idle
@@ -97,9 +100,12 @@ class Settings(BaseSettings):
     llm_timeout_s: float = Field(60.0, gt=0)
 
     # ---- Embeddings ----
-    embedding_provider: Literal["local", "openai"] = "local"
+    embedding_provider: Literal["local", "openai", "gemini"] = "local"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     openai_embedding_model: str = "text-embedding-3-small"
+    gemini_embedding_model: str = "gemini-embedding-001"
+    gemini_embedding_dim: int = Field(768, ge=128, le=3072)  # smaller vectors keep the index compact
+    gemini_embed_per_minute: int = Field(90, ge=1)  # free tier allows 100 texts/min; raise on a paid plan
 
     # ---- Storage ----
     chroma_dir: Path = Path("./data/vectorstore")
@@ -122,7 +128,7 @@ class Settings(BaseSettings):
     memory: MemorySettings = MemorySettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
 
-    @field_validator("openai_api_key", mode="before")
+    @field_validator("openai_api_key", "gemini_api_key", mode="before")
     @classmethod
     def _blank_key_is_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
@@ -149,12 +155,18 @@ class Settings(BaseSettings):
         """Identifier of the embedding model currently configured (provider-qualified)."""
         if self.embedding_provider == "openai":
             return f"openai:{self.openai_embedding_model}"
+        if self.embedding_provider == "gemini":
+            return f"gemini:{self.gemini_embedding_model}:{self.gemini_embedding_dim}"
         return f"local:{self.embedding_model}"
 
     @property
     def active_llm_model(self) -> str:
         """Name of the chat model currently configured."""
-        return self.openai_model if self.llm_provider == "openai" else self.ollama_model
+        if self.llm_provider == "openai":
+            return self.openai_model
+        if self.llm_provider == "gemini":
+            return self.gemini_model
+        return self.ollama_model
 
     @classmethod
     def settings_customise_sources(

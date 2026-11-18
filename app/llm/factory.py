@@ -1,8 +1,11 @@
-"""Chat model factory: OpenAI (cloud) or Ollama (local LLaMA)."""
+"""Chat model factory: Gemini or OpenAI (cloud), or Ollama (local LLaMA)."""
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from langchain_core.language_models import BaseChatModel
+from langchain_core.rate_limiters import InMemoryRateLimiter
 
 from app.core.config import get_settings
 from app.core.exceptions import LLMUnavailableError
@@ -10,6 +13,12 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 _override: BaseChatModel | None = None
+
+
+@lru_cache
+def _gemini_limiter(requests_per_minute: int) -> InMemoryRateLimiter:
+    """One limiter shared by every Gemini chat model, so bursts stay under the quota."""
+    return InMemoryRateLimiter(requests_per_second=requests_per_minute / 60, max_bucket_size=1)
 
 
 def set_llm_override(llm: BaseChatModel | None) -> None:
@@ -43,6 +52,27 @@ def get_llm(streaming: bool = False) -> BaseChatModel:
                 timeout=s.llm_timeout_s,
                 max_retries=2,
                 streaming=streaming,
+            )
+        if s.llm_provider == "gemini":
+            if s.gemini_api_key is None:
+                raise LLMUnavailableError(
+                    "GEMINI_API_KEY is not set. Add it to .env or switch LLM_PROVIDER=ollama."
+                )
+            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            extra: dict[str, int] = {}
+            if "2.5" in s.gemini_model and "pro" not in s.gemini_model:
+                extra["thinking_budget"] = 0  # hidden reasoning tokens would eat the answer budget
+            return ChatGoogleGenerativeAI(
+                model=s.gemini_model,
+                google_api_key=s.gemini_api_key,
+                temperature=s.llm_temperature,
+                max_output_tokens=s.llm_max_tokens,
+                timeout=s.llm_timeout_s,
+                max_retries=2,
+                streaming=streaming,
+                rate_limiter=_gemini_limiter(s.gemini_requests_per_minute),
+                **extra,
             )
         from langchain_ollama import ChatOllama
 

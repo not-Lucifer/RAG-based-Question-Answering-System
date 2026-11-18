@@ -7,11 +7,11 @@ from typing import Any
 import streamlit as st
 from api_client import ApiClient, ApiError
 
-STATUS_ICON = {"READY": "🟢", "PROCESSING": "🟡", "FAILED": "🔴"}
+STATUS_ICON = {"READY": ":green[●]", "PROCESSING": ":orange[●]", "FAILED": ":red[●]"}
 
 
 def _library(client: ApiClient, docs: list[dict[str, Any]]) -> None:
-    st.subheader("📚 Library")
+    st.subheader("Library")
     with st.form("upload", clear_on_submit=True):
         files = st.file_uploader("PDF notes", type=["pdf"], accept_multiple_files=True)
         subject = st.text_input("Subject tag", placeholder="e.g. DBMS")
@@ -21,7 +21,7 @@ def _library(client: ApiClient, docs: list[dict[str, Any]]) -> None:
             with st.spinner(f"Indexing {f.name}…"):
                 try:
                     res = client.upload(f.name, f.getvalue(), subject.strip() or None)
-                    st.toast(f"✅ {res['filename']}: {res['num_pages']} pages, {res['num_chunks']} chunks")
+                    st.toast(f"{res['filename']}: {res['num_pages']} pages, {res['num_chunks']} chunks")
                 except ApiError as err:
                     st.error(f"{f.name}: {err.message}")
         st.rerun()
@@ -31,12 +31,14 @@ def _library(client: ApiClient, docs: list[dict[str, Any]]) -> None:
         return
     for doc in docs:
         col_info, col_del = st.columns([5, 1])
-        icon = STATUS_ICON.get(doc["status"], "⚪")
+        icon = STATUS_ICON.get(doc["status"], ":gray[●]")
         col_info.markdown(f"{icon} **{doc['filename']}**")
         col_info.caption(f"{doc['subject']} · {doc['num_pages']} pages · {doc['num_chunks']} chunks")
         if doc["status"] == "FAILED" and doc.get("error_message"):
-            col_info.caption(f"⚠️ {doc['error_message']}")
-        if col_del.button("🗑", key=f"del-{doc['id']}", help=f"Delete {doc['filename']}"):
+            col_info.caption(doc["error_message"])
+        if col_del.button(
+            "", icon=":material/delete:", key=f"del-{doc['id']}", help=f"Delete {doc['filename']}"
+        ):
             try:
                 client.delete_document(doc["id"])
                 st.rerun()
@@ -45,7 +47,7 @@ def _library(client: ApiClient, docs: list[dict[str, Any]]) -> None:
 
 
 def _filters(docs: list[dict[str, Any]]) -> dict[str, Any]:
-    st.subheader("🔎 Filters")
+    st.subheader("Filters")
     ready = [d for d in docs if d["status"] == "READY"]
     subjects = sorted({d["subject"] for d in ready})
     chosen_subjects = st.multiselect("Subjects", subjects)
@@ -58,8 +60,8 @@ def _filters(docs: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _sessions(client: ApiClient) -> None:
-    st.subheader("💬 Chats")
-    if st.button("➕ New chat", width="stretch"):
+    st.subheader("Chats")
+    if st.button("New chat", icon=":material/add:", width="stretch"):
         st.session_state.session_id = None
         st.session_state.messages = []
         st.rerun()
@@ -71,8 +73,12 @@ def _sessions(client: ApiClient) -> None:
     for sess in sessions[:30]:
         col_open, col_del = st.columns([5, 1])
         active = sess["id"] == st.session_state.get("session_id")
-        label = ("▶ " if active else "") + sess["title"]
-        if col_open.button(label, key=f"open-{sess['id']}", width="stretch"):
+        if col_open.button(
+            sess["title"],
+            key=f"open-{sess['id']}",
+            type="primary" if active else "secondary",
+            width="stretch",
+        ):
             try:
                 st.session_state.messages = [
                     {
@@ -87,7 +93,7 @@ def _sessions(client: ApiClient) -> None:
                 st.rerun()
             except ApiError as err:
                 st.error(err.message)
-        if col_del.button("🗑", key=f"delsess-{sess['id']}", help="Delete chat"):
+        if col_del.button("", icon=":material/delete:", key=f"delsess-{sess['id']}", help="Delete chat"):
             try:
                 client.delete_session(sess["id"])
                 if active:
