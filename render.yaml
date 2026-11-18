@@ -25,7 +25,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false          # secret: entered in the Dashboard, never committed
       - key: RETRIEVAL__SCORE_THRESHOLD
-        value: "0.64"        # refusal gate tuned for Gemini embeddings (MiniLM uses 0.25)
+        value: "0.70"        # refusal gate tuned for gemini-embedding-2 (MiniLM uses 0.25)
       - key: CHROMA_DIR
         value: /var/data/vectorstore
       - key: RAW_DIR

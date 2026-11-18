@@ -14,10 +14,11 @@ RUN pip install --no-cache-dir -r requirements-prod.txt -r requirements-ui.txt
 
 COPY --chown=user . .
 
-# Cloud configuration. GEMINI_API_KEY is NOT set here: add it as a Space secret.
+# Cloud configuration. GEMINI_API_KEY is NOT set here: add it as an environment variable in the Render dashboard.
 ENV LLM_PROVIDER=gemini \
     EMBEDDING_PROVIDER=gemini \
-    RETRIEVAL__SCORE_THRESHOLD=0.64 \
+    GEMINI_EMBEDDING_MODEL=gemini-embedding-2 \
+    RETRIEVAL__SCORE_THRESHOLD=0.70 \
     BACKEND_URL=http://127.0.0.1:8000 \
     LOG_LEVEL=INFO
 
