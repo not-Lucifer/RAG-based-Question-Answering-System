@@ -111,3 +111,23 @@ def test_rate_limited_embeddings_retry_on_quota_error() -> None:
     emb = RateLimitedEmbeddings(Flaky(), per_minute=100, sleep=pauses.append)  # type: ignore[arg-type]
     assert emb.embed_documents(["a", "b"]) == [[0.0], [0.0]]
     assert pauses == [40]
+
+
+def test_daily_embedding_quota_fails_fast_with_clear_error() -> None:
+    from app.core.exceptions import EmbeddingQuotaError
+    from app.embeddings.factory import RateLimitedEmbeddings
+
+    class OutOfQuota:
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            raise RuntimeError("429 RESOURCE_EXHAUSTED EmbedContentRequestsPerDayPerProjectPerModel-FreeTier")
+
+        def embed_query(self, text: str) -> list[float]:
+            raise RuntimeError("429 RESOURCE_EXHAUSTED EmbedContentRequestsPerDayPerProjectPerModel-FreeTier")
+
+    pauses: list[float] = []
+    emb = RateLimitedEmbeddings(OutOfQuota(), per_minute=100, sleep=pauses.append)  # type: ignore[arg-type]
+    with pytest.raises(EmbeddingQuotaError, match="quota"):
+        emb.embed_documents(["a"])
+    with pytest.raises(EmbeddingQuotaError):
+        emb.embed_query("q")
+    assert pauses == []  # no pointless retries for a limit that lasts hours

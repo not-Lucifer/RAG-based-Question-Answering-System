@@ -18,7 +18,8 @@ except ImportError:  # pragma: no cover
 
 DEFAULT_BACKEND = "http://127.0.0.1:8000"
 FRIENDLY = {
-    "BACKEND_DOWN": "The backend is not reachable. Start it with `make api` (or `.\\make.ps1 api`).",
+    "BACKEND_DOWN": "The backend is not reachable. On the hosted demo it may still be starting: wait a "
+    "minute and refresh. Running locally? Start it with `make api` (or `.\\make.ps1 api`).",
     "TIMEOUT": "The backend took too long to respond. Try again, or use a smaller PDF.",
     "LLM_UNAVAILABLE": "The language model is unavailable. Check your API key or that Ollama is running.",
     "INDEX_MISMATCH": "The index was built with a different embedding model. Run "
