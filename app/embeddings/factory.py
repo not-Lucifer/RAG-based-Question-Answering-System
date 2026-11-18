@@ -11,7 +11,7 @@ from functools import lru_cache
 from langchain_core.embeddings import Embeddings
 
 from app.core.config import get_settings
-from app.core.exceptions import EmbeddingError
+from app.core.exceptions import EmbeddingError, EmbeddingQuotaError
 from app.core.logging import get_logger
 
 log = get_logger(__name__)
@@ -65,8 +65,16 @@ class RateLimitedEmbeddings(Embeddings):
             try:
                 return fn()
             except Exception as exc:
-                if "RESOURCE_EXHAUSTED" not in str(exc) or attempt == 3:
+                text = str(exc)
+                if "RESOURCE_EXHAUSTED" not in text:
                     raise
+                if "PerDay" in text or "per day" in text:
+                    # A daily limit will not clear in a minute: fail now with a clear message.
+                    raise EmbeddingQuotaError() from exc
+                if attempt == 3:
+                    raise EmbeddingQuotaError(
+                        "Embedding requests are being rate limited. Try again shortly."
+                    ) from exc
                 log.warning("embedding quota reached; pausing", extra={"fields": {"attempt": attempt + 1}})
                 self._sleep(40)
         raise AssertionError("unreachable")

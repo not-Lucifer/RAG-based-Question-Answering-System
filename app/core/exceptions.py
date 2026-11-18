@@ -62,6 +62,14 @@ class EmbeddingError(AppError):
     code, status_code, default_detail = "EMBEDDING_UNAVAILABLE", 503, "The embedding model is unavailable."
 
 
+class EmbeddingQuotaError(EmbeddingError):
+    code, status_code = "EMBEDDING_QUOTA", 429
+    default_detail = (
+        "The embedding service's free quota is used up (Gemini allows 1,000 embedding requests a day). "
+        "Try again after it resets, or use another API key."
+    )
+
+
 class VectorStoreError(AppError):
     code, status_code, default_detail = "VECTORSTORE_ERROR", 500, "Vector store operation failed."
 
