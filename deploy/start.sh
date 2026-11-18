@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the API and the UI in one container (Hugging Face Space).
+# Start the API and the UI in one container (free-tier hosting).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -10,7 +10,7 @@ API_PID=$!
 python scripts/seed_library.py --path data/samples --wait 120 &
 
 streamlit run frontend/streamlit_app.py \
-  --server.port "${PORT:-7860}" --server.address 0.0.0.0 --server.headless true \
+  --server.port "${PORT:-8501}" --server.address 0.0.0.0 --server.headless true \
   --server.enableXsrfProtection false --server.enableCORS false &
 UI_PID=$!
 

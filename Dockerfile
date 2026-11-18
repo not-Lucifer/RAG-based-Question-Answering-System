@@ -1,4 +1,4 @@
-# Hugging Face Space (Docker SDK): FastAPI backend and Streamlit UI in one container.
+# One container for free hosting (Render free plan): FastAPI backend and Streamlit UI together.
 # Free-tier storage is wiped on restart, so start.sh re-seeds the library from data/samples.
 FROM python:3.13-slim
 
@@ -21,5 +21,5 @@ ENV LLM_PROVIDER=gemini \
     BACKEND_URL=http://127.0.0.1:8000 \
     LOG_LEVEL=INFO
 
-EXPOSE 7860
-CMD ["bash", "deploy/huggingface/start.sh"]
+# The platform sets $PORT (Render: 10000); start.sh serves the UI on it.
+CMD ["bash", "deploy/start.sh"]

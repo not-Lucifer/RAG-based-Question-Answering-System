@@ -158,22 +158,16 @@ python scripts/run_eval.py --modes similarity mmr hybrid              # add --ll
 - Uploads are checked for size limit, `.pdf` extension, MIME type and `%PDF-` magic bytes. Files are stored as `<uuid>.pdf` (so a client filename can never choose the path), and display filenames are sanitised.
 - Unexpected server errors return a generic message. Details go only to the server log.
 
-## Deployment (Hugging Face Spaces, free)
+## Deployment (Render free plan, Docker)
 
-The `Dockerfile` runs the API and the UI in one container on a free Space (2 vCPU, 16 GB RAM). Free storage is wiped when the Space restarts, so `deploy/huggingface/start.sh` re-uploads the PDFs in `data/samples` each time (about 20 chunks, a few Gemini embedding requests); anything a visitor uploads is lost on restart.
+The `Dockerfile` runs the API and the UI in one container, so a single free Render web service is enough. The free plan has no persistent disk and sleeps after about 15 minutes without visitors (the first request after that takes around a minute). Storage is wiped on every restart, so `deploy/start.sh` re-uploads the PDFs in `data/samples` each time (about 20 chunks, a few Gemini embedding requests); anything a visitor uploads is lost on restart. Memory is not a problem: the API uses about 160 MB and the UI about 65 MB, well under the 512 MB limit.
 
-1. Create a Space at huggingface.co: **New Space**, SDK **Docker**, template **Blank**, hardware **CPU basic (free)**.
-2. In the Space: **Settings → Variables and secrets → New secret** named `GEMINI_API_KEY`.
-3. Create an access token with write permission (Settings → Access Tokens), then run:
+1. On [dashboard.render.com](https://dashboard.render.com) choose **New → Web Service** and connect this GitHub repository (pick the branch you want to deploy).
+2. Set **Language** to **Docker** and **Instance type** to **Free**.
+3. Under **Environment Variables** add `GEMINI_API_KEY` with your key. Enter it only there, never in the repository.
+4. Create the service and watch the build logs. When the log shows the service is live, open its `onrender.com` URL.
 
-   ```bash
-   python scripts/push_to_space.py --space your-username/your-space-name
-   ```
-
-   Git asks for your Hugging Face username and the token as the password. The script pushes a copy of `HEAD` with the Space metadata added to its README; your repository is not changed.
-4. Watch the build logs on the Space page. When it shows **Running**, open the app.
-
-The Space uses `LLM_PROVIDER=gemini`, `EMBEDDING_PROVIDER=gemini` and `RETRIEVAL__SCORE_THRESHOLD=0.64` (set in the `Dockerfile`). The free Gemini tier limits requests per minute and per day (the app throttles itself to stay under the per-minute limits).
+The container uses `LLM_PROVIDER=gemini`, `EMBEDDING_PROVIDER=gemini` and `RETRIEVAL__SCORE_THRESHOLD=0.64` (set in the `Dockerfile`). The free Gemini tier limits requests per minute and per day (1,000 embedding requests a day); the app throttles itself under the per-minute limits.
 
 ## Deployment (Render, paid, persistent storage)
 
