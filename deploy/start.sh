@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start the API and the UI in one container (free-tier hosting).
 set -euo pipefail
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/.."
 
 uvicorn app.main:app --host 127.0.0.1 --port 8000 &
 API_PID=$!
